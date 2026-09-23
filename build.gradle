@@ -34,6 +34,14 @@ neoForge {
 
 repositories {
     mavenCentral()
+
+    // Parchment mappings repository
+    maven {
+        name = "ParchmentMC"
+        url = "https://maven.parchmentmc.org"
+    }
+
+    // Sable & Aeronautics repository
     maven {
         name = "RyanHCode Maven"
         url = "https://maven.ryanhcode.dev/releases"
