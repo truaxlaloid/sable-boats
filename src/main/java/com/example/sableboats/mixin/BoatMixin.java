@@ -7,8 +7,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,8 +20,6 @@ public abstract class BoatMixin extends Entity implements ISablePhysicsEntity {
     @Shadow private boolean inputRight;
     @Shadow private boolean inputUp;
     @Shadow private boolean inputDown;
-
-    @Shadow protected abstract Vec3 getPassengerAttachmentPoint(Entity passenger, net.minecraft.world.entity.EntityDimensions dimensions, float partialTicks);
 
     @Unique
     private BoatPhysicsHandler sable$physicsHandler;
@@ -41,24 +37,32 @@ public abstract class BoatMixin extends Entity implements ISablePhysicsEntity {
     private void sable$overrideTick(CallbackInfo ci) {
         if (this.sable$physicsHandler != null) {
             super.tick();
-            this.sable$physicsHandler.applyPropulsion(this.inputUp, this.inputDown, this.inputLeft, this.inputRight);
+            
+            // Only apply pilot input if a player is steering
+            if (this.isVehicle() && this.getFirstPassenger() instanceof net.minecraft.world.entity.player.Player) {
+                this.sable$physicsHandler.applyPropulsion(this.inputUp, this.inputDown, this.inputLeft, this.inputRight);
+            }
+            
             this.sable$physicsHandler.tick();
             this.move(net.minecraft.world.entity.MoverType.SELF, this.getDeltaMovement());
-            ci.cancel(); // Suppress vanilla kinematic movement
+            ci.cancel();
         }
     }
 
     @Inject(method = "positionRider(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$MoveFunction;)V", at = @At("HEAD"), cancellable = true)
-    private void sable$rotatePassenger(Entity passenger, Entity.MoveFunction moveFunction, CallbackInfo ci) {
-        if (this.sable$physicsHandler != null) {
-            Vec3 localOffset = this.getPassengerAttachmentPoint(passenger, passenger.getDimensions(passenger.getPose()), 1.0f);
-            Quaternionf rot = this.sable$getInterpolatedOrientation(1.0f);
-            
-            Vector3f rotated = new Vector3f((float) localOffset.x, (float) localOffset.y, (float) localOffset.z);
-            rot.transform(rotated);
+    private void sable$positionRider(Entity passenger, Entity.MoveFunction moveFunction, CallbackInfo ci) {
+        if (this.sable$physicsHandler != null && this.hasPassenger(passenger)) {
+            float seatZ = (this.getPassengers().size() > 1 && this.getPassengers().indexOf(passenger) == 1) ? -0.4f : 0.2f;
+            Vec3 localSeatOffset = new Vec3(0.0, 0.35, seatZ).yRot((float) Math.toRadians(-this.getYRot()));
 
-            Vec3 finalPos = this.position().add(rotated.x(), rotated.y(), rotated.z());
-            moveFunction.accept(passenger, finalPos.x, finalPos.y, finalPos.z);
+            // Subtract passenger vehicle attachment point to prevent floating above boat
+            Vec3 vehicleAttachment = passenger.getVehicleAttachmentPoint(this);
+
+            double posX = this.getX() + localSeatOffset.x - vehicleAttachment.x;
+            double posY = this.getY() + localSeatOffset.y - vehicleAttachment.y;
+            double posZ = this.getZ() + localSeatOffset.z - vehicleAttachment.z;
+
+            moveFunction.accept(passenger, posX, posY, posZ);
             ci.cancel();
         }
     }
@@ -69,9 +73,12 @@ public abstract class BoatMixin extends Entity implements ISablePhysicsEntity {
     }
 
     @Override
-    public Quaternionf sable$getInterpolatedOrientation(float partialTicks) {
-        return this.sable$physicsHandler != null 
-                ? this.sable$physicsHandler.getInterpolatedOrientation(partialTicks) 
-                : new Quaternionf();
+    public float sable$getPitch(float partialTicks) {
+        return this.sable$physicsHandler != null ? this.sable$physicsHandler.getPitch(partialTicks) : 0.0f;
+    }
+
+    @Override
+    public float sable$getRoll(float partialTicks) {
+        return this.sable$physicsHandler != null ? this.sable$physicsHandler.getRoll(partialTicks) : 0.0f;
     }
 }
