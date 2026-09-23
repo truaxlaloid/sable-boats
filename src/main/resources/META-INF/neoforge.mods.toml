@@ -4,9 +4,9 @@ license="MIT"
 
 [[mods]]
 modId="sableboats"
-version="${file.jarVersion}"
+version="1.0.0"
 displayName="Sable Boats"
-description="Replaces Minecraft boat physics with dynamic Sable physics."
+description="Replaces vanilla Minecraft boat physics with Sable 6-DOF physics."
 
 [[dependencies.sableboats]]
 modId="neoforge"
