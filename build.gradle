@@ -30,6 +30,12 @@ neoForge {
 repositories {
     mavenCentral()
 
+    // BlameJared (official repository for Foundry Veil)
+    maven {
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
+    }
+
     // Sable & Aeronautics repository
     maven {
         name = "RyanHCode Maven"
@@ -38,8 +44,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.findProperty('sable_version') ?: '2.0.5'}"
-    runtimeOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.findProperty('sable_version') ?: '2.0.5'}"
+    compileOnly("dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.findProperty('sable_version') ?: '2.0.5'}") {
+        transitive = false
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
