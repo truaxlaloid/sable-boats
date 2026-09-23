@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.sableboats.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "sableboats.refmap.json",
+  "mixins": [
+    "BoatMixin"
+  ],
+  "client": [
+    "client.BoatRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
