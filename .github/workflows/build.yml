@@ -1,41 +1,73 @@
-name: Build Mod
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.78'
+}
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+// Read properties into top-level variables to avoid task-scope conflicts
+def mod_id = property('mod_id').toString()
+def mod_name = property('mod_name').toString()
+def mod_version = property('mod_version').toString()
+def mod_group = property('mod_group').toString()
+def minecraft_version = property('minecraft_version').toString()
+def neoforge_version = property('neoforge_version').toString()
+def sable_version = property('sable_version').toString()
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+version = mod_version
+group = mod_group
 
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
+base {
+    archivesName = "${mod_id}-neoforge-${minecraft_version}"
+}
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
-      # Automatically installs Gradle 8.10.2 without needing gradle-wrapper.jar
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.10.2'
+neoForge {
+    version = neoforge_version
 
-      - name: Build with Gradle
-        run: gradle build --no-daemon --stacktrace
+    parchment {
+        minecraftVersion = '1.21.1'
+        mappingsVersion = '2024.11.10'
+    }
 
-      - name: Upload Built Mod Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SableBoats-1.21.1
-          path: build/libs/*.jar
-          if-no-files-found: error
-          retention-days: 14
+    mods {
+        register(mod_id) {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "RyanHCode Maven"
+        url = "https://maven.ryanhcode.dev/releases"
+    }
+}
+
+dependencies {
+    compileOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${sable_version}"
+    runtimeOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${sable_version}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes([
+            'Specification-Title'     : mod_id,
+            'Specification-Vendor'    : "example",
+            'Specification-Version'   : "1",
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : "example",
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
