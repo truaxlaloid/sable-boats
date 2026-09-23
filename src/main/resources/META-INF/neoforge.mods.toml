@@ -1,0 +1,33 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="sableboats"
+version="${file.jarVersion}"
+displayName="Sable Boats"
+description="Replaces Minecraft boat physics with dynamic Sable physics."
+
+[[dependencies.sableboats]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.0,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.sableboats]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.sableboats]]
+modId="sable"
+type="required"
+versionRange="[2.0.5,)"
+ordering="AFTER"
+side="BOTH"
+
+[[mixins]]
+config="sableboats.mixins.json"
