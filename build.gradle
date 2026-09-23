@@ -4,11 +4,11 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.78'
 }
 
-version = "${property('mod_version')}"
-group = "${property('mod_group')}"
+version = project.findProperty('mod_version') ?: '1.0.0'
+group = project.findProperty('mod_group') ?: 'com.example.sableboats'
 
 base {
-    archivesName = "${property('mod_id')}-neoforge-${property('minecraft_version')}"
+    archivesName = "sableboats-neoforge-1.21.1"
 }
 
 java {
@@ -18,7 +18,7 @@ java {
 }
 
 neoForge {
-    version = "${property('neoforge_version')}"
+    version = project.findProperty('neoforge_version') ?: '21.1.228'
 
     parchment {
         minecraftVersion = '1.21.1'
@@ -26,7 +26,7 @@ neoForge {
     }
 
     mods {
-        "${property('mod_id')}" {
+        register("sableboats") {
             sourceSet(sourceSets.main)
         }
     }
@@ -34,7 +34,6 @@ neoForge {
 
 repositories {
     mavenCentral()
-    // Official Sable & Aeronautics maven
     maven {
         name = "RyanHCode Maven"
         url = "https://maven.ryanhcode.dev/releases"
@@ -42,26 +41,10 @@ repositories {
 }
 
 dependencies {
-    // Sable NeoForge 1.21.1 dependency
-    compileOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${property('sable_version')}"
-    runtimeOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${property('sable_version')}"
+    compileOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.findProperty('sable_version') ?: '2.0.5'}"
+    runtimeOnly "dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.findProperty('sable_version') ?: '2.0.5'}"
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-
-// Make sure the mixin configuration is recognized
-tasks.named('jar', Jar) {
-    manifest {
-        attributes([
-            'Specification-Title'     : "${property('mod_id')}",
-            'Specification-Vendor'    : "example",
-            'Specification-Version'   : "1",
-            'Implementation-Title'    : project.name,
-            'Implementation-Version'  : project.version,
-            'Implementation-Vendor'   : "example",
-            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
 }
